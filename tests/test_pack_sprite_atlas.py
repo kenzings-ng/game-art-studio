@@ -1,13 +1,13 @@
 import os
 import sys
-import json
 import tempfile
 import unittest
+
 from PIL import Image
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts")))
 
-from pack_sprite_atlas import pack_frames, next_power_of_two
+from pack_sprite_atlas import next_power_of_two, pack_frames
 
 
 class TestPackSpriteAtlas(unittest.TestCase):

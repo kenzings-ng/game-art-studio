@@ -5,11 +5,11 @@ Packs individual sprite frames into a unified texture atlas PNG and standard
 TexturePacker JSON format for direct use in Godot, Unity, PixiJS, Phaser, and Defold.
 """
 
-import os
-import sys
+import argparse
 import json
 import math
-import argparse
+import os
+
 from PIL import Image
 
 

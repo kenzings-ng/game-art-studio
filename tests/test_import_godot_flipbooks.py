@@ -2,11 +2,12 @@ import os
 import sys
 import tempfile
 import unittest
+
 from PIL import Image
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts")))
 
-from import_godot_flipbooks import generate_godot_uid, create_godot_sprite_frames
+from import_godot_flipbooks import create_godot_sprite_frames, generate_godot_uid
 
 
 class TestImportGodotFlipbooks(unittest.TestCase):

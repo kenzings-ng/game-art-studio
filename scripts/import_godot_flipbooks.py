@@ -5,9 +5,9 @@ Generates native Godot 4 .tres (SpriteFrames) and optional .tscn (AnimatedSprite
 from a sequence of sliced PNG animation frames without requiring Godot Editor binary.
 """
 
+import argparse
 import os
 import sys
-import argparse
 import uuid
 
 

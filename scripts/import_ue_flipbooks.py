@@ -5,9 +5,9 @@ Imports individual PNG frames, configures pixel filtering (Point/Nearest, No Mip
 creates UPaperSprite assets, and compiles them into a UPaperFlipbook asset.
 """
 
+import argparse
 import os
 import sys
-import argparse
 
 try:
     import unreal
@@ -170,7 +170,7 @@ def main():
     parser.add_argument("--pivot", choices=["bottom_center", "center"], default="bottom_center", help="Sprite pivot alignment")
 
     # Use parse_known_args to allow extra Unreal-specific flags without crashing
-    args, unknown = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     if unreal is None:
         print("Error: Unreal Engine Python API ('unreal' module) is not available in standard Python environment.", file=sys.stderr)

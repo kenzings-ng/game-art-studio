@@ -2,11 +2,12 @@ import os
 import sys
 import tempfile
 import unittest
+
 from PIL import Image
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts")))
 
-from generate_item_icon_sheet import parse_grid_dimensions, apply_rarity_border, slice_icon_grid, RARITY_COLORS
+from generate_item_icon_sheet import RARITY_COLORS, apply_rarity_border, parse_grid_dimensions, slice_icon_grid
 
 
 class TestGenerateItemIconSheet(unittest.TestCase):

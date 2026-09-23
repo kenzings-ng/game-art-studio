@@ -5,9 +5,10 @@ Slices item icon grids (weapons, armor, potions, tomes) and applies standardized
 colored borders (Common, Uncommon, Rare, Epic, Legendary) for inventory and quickbars.
 """
 
+import argparse
 import os
 import sys
-import argparse
+
 from PIL import Image, ImageDraw
 
 # 5-Tier Rarity Color Palette

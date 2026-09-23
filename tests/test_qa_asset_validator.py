@@ -2,8 +2,8 @@ import os
 import sys
 import tempfile
 import unittest
+
 from PIL import Image
-import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts")))
 
@@ -11,7 +11,7 @@ from qa_asset_validator import (
     analyze_palette,
     check_clipping,
     validate_animation_frames,
-    validate_isometric_tile
+    validate_isometric_tile,
 )
 
 
@@ -42,6 +42,24 @@ class TestQAAssetValidator(unittest.TestCase):
         is_clipped, edges = check_clipping(safe_im, margin=1)
         self.assertFalse(is_clipped)
         self.assertEqual(len(edges), 0)
+
+    def test_validate_animation_frames(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create 2 valid frames with 2 colors and proper padding
+            for i in range(2):
+                frame = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+                frame.putpixel((16, 16), (255, 0, 0, 255))
+                frame.putpixel((16, 17), (0, 255, 0, 255))
+                frame.save(os.path.join(tmpdir, f"frame_{i:02d}.png"))
+
+            passed, warnings = validate_animation_frames(tmpdir, max_colors=16)
+            self.assertTrue(passed)
+            self.assertEqual(len(warnings), 0)
+
+            # Palette budget test: pass max_colors=1 when 2 colors are used
+            passed_strict, warnings_strict = validate_animation_frames(tmpdir, max_colors=1)
+            self.assertFalse(passed_strict)
+            self.assertTrue(any("Palette Budget Exceeded" in w for w in warnings_strict))
 
     def test_validate_isometric_tile(self):
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -5,11 +5,12 @@ Extracts animation frames from AI-generated spritesheets, removes solid backgrou
 normalizes canvas bounds, and aligns bottom-center pivots.
 """
 
+import argparse
 import os
 import sys
-import argparse
-from PIL import Image
+
 import numpy as np
+from PIL import Image
 
 
 def parse_color_key(color_key_str):
@@ -60,7 +61,7 @@ def remove_background(img, color_key="auto", tolerance=30):
         return img
 
     data = np.array(img)
-    r, g, b, a = data[:, :, 0], data[:, :, 1], data[:, :, 2], data[:, :, 3]
+    r, g, b = data[:, :, 0], data[:, :, 1], data[:, :, 2]
 
     if color_key == "auto":
         corners = [

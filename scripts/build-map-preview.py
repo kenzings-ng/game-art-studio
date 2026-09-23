@@ -9,7 +9,6 @@ import json
 import re
 from pathlib import Path
 
-
 SUPPORTED_MODES = ("isometric", "hex", "dual-grid", "iso-dual-grid")
 MIME_TYPES = {
     ".png": "image/png",

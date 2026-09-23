@@ -11,7 +11,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 
-
 TILE_MODES = (
     "isometric",
     "hex",
@@ -98,7 +97,7 @@ def load_config(path: Path | None) -> tuple[dict[str, object], Path]:
         raise ValueError(f"Config does not exist or is not a file: {path}")
     data = json.loads(resolved.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
-        raise ValueError("Config root must be a JSON object")
+        raise TypeError("Config root must be a JSON object")
     return data, resolved.parent
 
 
@@ -163,7 +162,7 @@ def resolve_library_items(
             raw_path = raw_item.get("path")
             footprint = parse_library_footprint(raw_item.get("footprint"), item_label)
         else:
-            raise ValueError(f"{item_label} must be a path string or object")
+            raise TypeError(f"{item_label} must be a path string or object")
         path = resolve_local_path(raw_path, config_dir, f"{item_label}.path")
         items.append((path, footprint[0], footprint[1]))
     return items
@@ -192,7 +191,7 @@ def load_side_scrolling_manifest(path: Path) -> tuple[dict[str, object], Path]:
         raise ValueError(f"Manifest does not exist or is not a file: {path}")
     data = json.loads(resolved.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
-        raise ValueError("Side-scrolling manifest root must be a JSON object")
+        raise TypeError("Side-scrolling manifest root must be a JSON object")
     return data, resolved.parent
 
 
@@ -213,7 +212,7 @@ def resolve_side_scrolling_inputs(
 ) -> tuple[list[Path], list[int], Path | None]:
     side_config = config.get("side_scrolling", {})
     if not isinstance(side_config, dict):
-        raise ValueError("side_scrolling must be a JSON object")
+        raise TypeError("side_scrolling must be a JSON object")
 
     manifest_value = args.manifest or side_config.get("manifest")
     manifest: dict[str, object] = {}
@@ -440,7 +439,7 @@ def build_runtime(args: argparse.Namespace) -> tuple[dict[str, object], list[Med
     if isinstance(zoom, bool) or not isinstance(zoom, int) or not 1 <= zoom <= 4:
         raise ValueError("zoom must be an integer between 1 and 4")
     if not isinstance(grid, bool):
-        raise ValueError("grid must be true or false")
+        raise TypeError("grid must be true or false")
 
     html = (skill_root / "assets" / "map-tile-layout-demo.html").read_bytes()
     helper_tag = b'<script src="../scripts/map-tile-layout.js"></script>'
@@ -547,10 +546,10 @@ def make_handler(
                 return
             self.send_error(404)
 
-        def do_GET(self) -> None:  # noqa: N802
+        def do_GET(self) -> None:
             self.route(include_body=True)
 
-        def do_HEAD(self) -> None:  # noqa: N802
+        def do_HEAD(self) -> None:
             self.route(include_body=False)
 
         def log_message(self, _format: str, *_args: object) -> None:

@@ -8,12 +8,12 @@ Verifies:
 4. 2.5D Isometric Diamond grid boundary compliance (128x64 seam detection)
 """
 
+import argparse
 import os
 import sys
-import argparse
-from PIL import Image
-import numpy as np
 
+import numpy as np
+from PIL import Image
 
 PRESET_COLOR_BUDGETS = {
     "stardew": 16,
@@ -35,7 +35,7 @@ def analyze_palette(image):
         return set()
     # Unique colors
     unique_colors = np.unique(visible_pixels, axis=0)
-    return set(tuple(c) for c in unique_colors)
+    return {tuple(c) for c in unique_colors}
 
 
 def check_clipping(image, margin=1):
