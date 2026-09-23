@@ -146,9 +146,17 @@ def slice_horizontal_strip(img, num_frames, output_dir, prefix="frame", anchor="
     return saved_paths
 
 
+def process_single_sheet(input_path, output_dir, frames, prefix, color_key, tolerance, anchor):
+    parsed_key = parse_color_key(color_key)
+    src_img = Image.open(input_path)
+    transparent_img = remove_background(src_img, color_key=parsed_key, tolerance=tolerance)
+    return slice_horizontal_strip(transparent_img, frames, output_dir, prefix=prefix, anchor=anchor)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Slice spritesheets with auto-transparency and anchor alignment")
-    parser.add_argument("--input", "--input_sheet", dest="input", required=True, help="Path to input spritesheet image")
+    parser.add_argument("--input", "--input_sheet", dest="input", default=None, help="Path to input spritesheet image")
+    parser.add_argument("--batch_dir", default=None, help="Process all spritesheets in this directory")
     parser.add_argument("--output_dir", required=True, help="Directory to save extracted frames")
     parser.add_argument("--frames", type=int, default=6, help="Number of horizontal animation frames")
     parser.add_argument("--prefix", default="frame", help="Prefix for output frame filenames")
@@ -158,14 +166,36 @@ def main():
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.input):
-        print(f"Error: Input file not found: {args.input}", file=sys.stderr)
+    if not args.input and not args.batch_dir:
+        print("Error: Either --input or --batch_dir must be specified.", file=sys.stderr)
         sys.exit(1)
 
-    parsed_key = parse_color_key(args.color_key)
-    src_img = Image.open(args.input)
-    transparent_img = remove_background(src_img, color_key=parsed_key, tolerance=args.tolerance)
-    slice_horizontal_strip(transparent_img, args.frames, args.output_dir, prefix=args.prefix, anchor=args.anchor)
+    if args.batch_dir:
+        if not os.path.exists(args.batch_dir):
+            print(f"Error: Batch directory not found: {args.batch_dir}", file=sys.stderr)
+            sys.exit(1)
+
+        valid_exts = (".png", ".jpg", ".jpeg", ".webp")
+        sheet_files = sorted([f for f in os.listdir(args.batch_dir) if f.lower().endswith(valid_exts)])
+        if not sheet_files:
+            print(f"No image files found in {args.batch_dir}", file=sys.stderr)
+            sys.exit(1)
+
+        total_extracted = 0
+        for sheet_f in sheet_files:
+            sheet_path = os.path.join(args.batch_dir, sheet_f)
+            sheet_name = os.path.splitext(sheet_f)[0]
+            sheet_out = os.path.join(args.output_dir, sheet_name)
+            res = process_single_sheet(sheet_path, sheet_out, args.frames, args.prefix, args.color_key, args.tolerance, args.anchor)
+            total_extracted += len(res)
+
+        print(f"=== Batch Complete: Processed {len(sheet_files)} sheets ({total_extracted} total frames) ===")
+    else:
+        if not os.path.exists(args.input):
+            print(f"Error: Input file not found: {args.input}", file=sys.stderr)
+            sys.exit(1)
+
+        process_single_sheet(args.input, args.output_dir, args.frames, args.prefix, args.color_key, args.tolerance, args.anchor)
 
 
 if __name__ == "__main__":

@@ -75,7 +75,8 @@ def parse_grid_dimensions(grid_str):
 
 def main():
     parser = argparse.ArgumentParser(description="Slice and frame item icons with 5-tier rarity colors")
-    parser.add_argument("--input", "--input_sheet", dest="input", required=True, help="Input icon grid image")
+    parser.add_argument("--input", "--input_sheet", dest="input", default=None, help="Input icon grid image")
+    parser.add_argument("--batch_dir", default=None, help="Process all icon grid images in this directory")
     parser.add_argument("--output_dir", required=True, help="Output folder")
     parser.add_argument("--grid", default=None, help="Grid format like '4x4' or '4' (sets both rows and cols)")
     parser.add_argument("--rows", type=int, default=None, help="Grid rows (default: 4 or parsed from --grid)")
@@ -84,16 +85,42 @@ def main():
 
     args = parser.parse_args()
 
+    if not args.input and not args.batch_dir:
+        print("Error: Either --input or --batch_dir must be specified.", file=sys.stderr)
+        sys.exit(1)
+
     # Resolve grid dimensions
     grid_rows, grid_cols = parse_grid_dimensions(args.grid)
     final_rows = args.rows if args.rows is not None else (grid_rows if grid_rows is not None else 4)
     final_cols = args.cols if args.cols is not None else (grid_cols if grid_cols is not None else 4)
 
-    if not os.path.exists(args.input):
-        print(f"Error: Input file not found: {args.input}", file=sys.stderr)
-        sys.exit(1)
+    if args.batch_dir:
+        if not os.path.exists(args.batch_dir):
+            print(f"Error: Batch directory not found: {args.batch_dir}", file=sys.stderr)
+            sys.exit(1)
 
-    slice_icon_grid(args.input, args.output_dir, rows=final_rows, cols=final_cols, default_rarity=args.rarity)
+        valid_exts = (".png", ".jpg", ".jpeg", ".webp")
+        grid_files = sorted([f for f in os.listdir(args.batch_dir) if f.lower().endswith(valid_exts)])
+        if not grid_files:
+            print(f"No image files found in {args.batch_dir}", file=sys.stderr)
+            sys.exit(1)
+
+        total_icons = 0
+        for gf in grid_files:
+            grid_path = os.path.join(args.batch_dir, gf)
+            grid_name = os.path.splitext(gf)[0]
+            grid_out = os.path.join(args.output_dir, grid_name)
+            saved = slice_icon_grid(grid_path, grid_out, rows=final_rows, cols=final_cols, default_rarity=args.rarity)
+            total_icons += len(saved)
+
+        print(f"=== Batch Complete: Processed {len(grid_files)} sheets ({total_icons} total icons) ===")
+    else:
+        if not os.path.exists(args.input):
+            print(f"Error: Input file not found: {args.input}", file=sys.stderr)
+            sys.exit(1)
+
+        slice_icon_grid(args.input, args.output_dir, rows=final_rows, cols=final_cols, default_rarity=args.rarity)
+
 
 if __name__ == "__main__":
     main()

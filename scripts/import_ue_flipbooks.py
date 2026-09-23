@@ -109,13 +109,17 @@ def import_texture_and_create_flipbook(png_frames_dir, ue_dest_path, flipbook_na
     sprite_factory = unreal.PaperSpriteFactory()
     created_sprites = []
 
-    # Determine pivot mode enum if available
+    # Determine pivot mode enum if available (avoid 'or' check so enum 0 isn't treated as falsy)
     pivot_enum_val = None
     if hasattr(unreal, 'SpritePivotMode'):
         if pivot_mode == "bottom_center":
-            pivot_enum_val = getattr(unreal.SpritePivotMode, 'BOTTOM_CENTER', None) or getattr(unreal.SpritePivotMode, 'SPRITE_PIVOT_MODE_BOTTOM_CENTER', None)
+            pivot_enum_val = getattr(unreal.SpritePivotMode, 'BOTTOM_CENTER', None)
+            if pivot_enum_val is None:
+                pivot_enum_val = getattr(unreal.SpritePivotMode, 'SPRITE_PIVOT_MODE_BOTTOM_CENTER', None)
         elif pivot_mode == "center":
-            pivot_enum_val = getattr(unreal.SpritePivotMode, 'CENTER_CENTER', None) or getattr(unreal.SpritePivotMode, 'SPRITE_PIVOT_MODE_CENTER_CENTER', None)
+            pivot_enum_val = getattr(unreal.SpritePivotMode, 'CENTER_CENTER', None)
+            if pivot_enum_val is None:
+                pivot_enum_val = getattr(unreal.SpritePivotMode, 'SPRITE_PIVOT_MODE_CENTER_CENTER', None)
 
     for base_name, tex in imported_textures:
         sprite_name = f"SP_{base_name}"

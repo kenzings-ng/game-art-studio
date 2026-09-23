@@ -1,6 +1,6 @@
 ---
 name: game-art-studio
-description: End-to-end AI Game Art & Asset Studio powered by local Nano Banana (Imagen 3 / Gemini Image) and open-source Meowa AI architecture. Creates 2D pixel & HD game assets, 8-directional character spritesheets, action-first animations, 2:1 isometric & hex tilesets, dual-grid autotiling atlases, parallax side-scrollers, 5-tier UI item icons, interactive browser map previewer, direct Unreal Engine Paper2D/PaperZD flipbook generation, and Anti-AI Handcrafted Art Styling — 100% free with zero credits or subscriptions.
+description: End-to-end AI Game Art & Asset Studio powered by local Nano Banana (Imagen 3 / Gemini Image) and open-source Meowa AI architecture. Creates 2D pixel & HD game assets, 8-directional character spritesheets, action-first animations, 2:1 isometric & hex tilesets, dual-grid autotiling atlases, parallax side-scrollers, 5-tier UI item icons, interactive browser map previewer, direct Unreal Engine Paper2D/PaperZD and Godot 4 SpriteFrames generation, and Anti-AI Handcrafted Art Styling — 100% free with zero credits or subscriptions.
 ---
 
 # Game Art Studio (Meowa Open-Source Architecture + Local Nano Banana Engine)
@@ -9,7 +9,7 @@ Game Art Studio là studio sản xuất tài nguyên đồ họa game toàn di�
 1. **Lõi sinh ảnh Nano Banana nội bộ** (`generate_image` — tương đương `gemini-3.1-flash-image` / `gemini-3-pro-image` mà chính Meowa AI sử dụng làm backend).
 2. **Kiến trúc mã nguồn mở chuẩn mực của Meowa AI** (`Meowa-AI/meowa-skills`): Quy chuẩn hợp đồng tài nguyên (Asset Contract), kỹ thuật Action-First Pose, ma trận căn lề đệm động (Directional Motion Padding), hệ tọa độ Isometric Diamond $128 \times 64$, Hex-Isometric, Dual-Grid Autotiling $4 \times 4$, và máy chủ xem trước bản đồ trên trình duyệt.
 3. **Giao Thức Khởi Tạo Hợp Đồng & Chống "Mùi AI" (Asset Contract & Anti-AI Engine)**: Tuyệt đối không sinh ảnh bừa bãi khi chưa chốt hợp đồng phong cách. Tự động liên kết các Preset kinh điển (Stardew Valley 16x16, Capcom CPS2, Hades, Hollow Knight) và áp dụng bộ luật thủ công (Hue-shifting, Line of Action, Không bóng gối).
-4. **Pipeline xuất xưởng Game Engine tự động**: Tách nền Chroma-key/Alpha, ghim tâm chân (Bottom-Center Pivot), tạo GIF preview động, và import trực tiếp vào **Unreal Engine 5 Paper2D / PaperZD** hoặc **Godot 4**.
+4. **Pipeline xuất xưởng Game Engine tự động**: Tách nền Chroma-key/Alpha, ghim tâm chân (Bottom-Center Pivot), tạo GIF preview động, và import trực tiếp vào **Unreal Engine 5 Paper2D / PaperZD** (`scripts/import_ue_flipbooks.py`) hoặc **Godot 4 AnimatedSprite2D** (`scripts/import_godot_flipbooks.py`).
 
 Toàn bộ quy trình chạy **cục bộ 100%, vĩnh viễn không tốn credit, không cần API key trả phí**.
 
@@ -23,7 +23,7 @@ Toàn bộ quy trình chạy **cục bộ 100%, vĩnh viễn không tốn credit
 ### A. Quy Trình Khóa Hợp Đồng 2 Nhánh (Two-Branch Contract Resolution):
 
 1. **Nhánh 1: Người dùng đã nêu tên Game cụ thể (e.g. "Stardew Valley", "Capcom", "Hollow Knight")**:
-   - **TỰ ĐỘNG ÁP DỤNG PRESET CHUẨN** trong [`references/asset-contract-presets.md`](file:///mnt/Data/Projects/game-art-studio/references/asset-contract-presets.md):
+   - **TỰ ĐỘNG ÁP DỤNG PRESET CHUẨN** trong [`references/asset-contract-presets.md`](references/asset-contract-presets.md):
      - **Stardew Valley / Terraria**: Lưới siêu thô $16 \times 16$ native, ngân sách màu 8-16 màu, viền neon đảo ngược nếu là vũ khí thiên hà.
      - **Capcom CPS2 / NeoGeo**: Lưới $64 \times 64$ / $128 \times 128$, viền đen than 1px, chuyển nhiệt độ màu gắt (Hue-shifting).
      - **Hollow Knight / Cuphead**: 2D HD cọ mực vẽ tay, nét cọ biến thiên, màu bệt phẳng.
@@ -40,7 +40,7 @@ Toàn bộ quy trình chạy **cục bộ 100%, vĩnh viễn không tốn credit
 
 ## 2. Bí Quyết Vẽ Art Sống Động, Không Giống AI (Anti-AI Craft Rules)
 
-Chi tiết chuyên sâu xem tại [`references/anti-ai-craft-guide.md`](file:///mnt/Data/Projects/game-art-studio/references/anti-ai-craft-guide.md):
+Chi tiết chuyên sâu xem tại [`references/anti-ai-craft-guide.md`](references/anti-ai-craft-guide.md):
 
 1. **Đường Động Lực (Line of Action) & Dáng Đứng Bất Đối Xứng (Contrapposto)**:
    - Cấm vẽ cột sống thẳng đứng $90^\circ$. Bắt buộc uốn cong hình chữ **C** hoặc chữ **S**.
@@ -79,7 +79,7 @@ Chuyển động cần khoảng trống trong suốt để di chuyển mà khôn
 ### C. Công Cụ Xử Lý Animation Đi Kèm:
 1. **Cắt Frame & Ghim Pivot Chân (`scripts/slice_spritesheet.py`)**:
    ```bash
-   python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/slice_spritesheet.py \
+   python3 scripts/slice_spritesheet.py \
        --input_sheet <path_to_spritesheet.png> \
        --output_dir <output_frames_folder> \
        --frames 8 \
@@ -89,17 +89,27 @@ Chuyển động cần khoảng trống trong suốt để di chuyển mà khôn
    ```
 2. **Ghép Animated GIF Preview (`scripts/assemble_flipbook_gif.py`)**:
    ```bash
-   python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/assemble_flipbook_gif.py \
+   python3 scripts/assemble_flipbook_gif.py \
        --frames_dir <output_frames_folder> \
        --output_gif <preview.gif> \
        --fps 12.0
    ```
 3. **Import Tự Động vào Unreal Engine 5 Paper2D (`scripts/import_ue_flipbooks.py`)**:
    ```bash
-   /mnt/Data/Engine/Binaries/Linux/UnrealEditor-Cmd \
+   /path/to/UnrealEditor-Cmd \
        ProjectAscendant/ProjectAscendant.uproject \
        -ExecutePythonScript="scripts/import_ue_flipbooks.py --frames_dir <output_frames_folder> --dest_path /Game/Art/Flipbooks --name FB_Hero_Attack --fps 12.0" \
        -nullrhi -nosound -unattended
+   ```
+4. **Import Tự Động vào Godot 4 SpriteFrames & AnimatedSprite2D (`scripts/import_godot_flipbooks.py`)**:
+   ```bash
+   python3 scripts/import_godot_flipbooks.py \
+       --frames_dir <output_frames_folder> \
+       --output_tres <output_frames_folder>/hero_run.tres \
+       --godot_res_dir res://art/characters \
+       --anim_name run \
+       --fps 12.0 \
+       --generate_scene
    ```
 
 ---
@@ -128,7 +138,7 @@ Chuyển động cần khoảng trống trong suốt để di chuyển mà khôn
 ### D. Máy Chủ Xem Trước Bản Đồ Trực Quan Trên Trình Duyệt (`map-preview-server.py`)
 Khởi động máy chủ xem trước độc lập để kiểm tra độ khít ô gạch, độ sâu z-order và hiệu ứng cuộn parallax ngay trên trình duyệt:
 ```bash
-python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/map-preview-server.py \
+python3 scripts/map-preview-server.py \
     --mode isometric \
     --image <tile_1.png> \
     --image <tile_2.png> \
@@ -137,7 +147,7 @@ python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/map-preview
     --lifetime 900
 ```
 - Hỗ trợ các chế độ: `isometric`, `hex`, `hd-isometric`, `dual-grid`, và `side-scrolling` (cuộn mượt 3 lớp parallax: background, midground, foreground).
-- File giao diện: [`assets/map-tile-layout-demo.html`](file:///home/kenzings/.gemini/config/skills/game-art-studio/assets/map-tile-layout-demo.html) kết hợp thư viện toán học [`scripts/map-tile-layout.js`](file:///home/kenzings/.gemini/config/skills/game-art-studio/scripts/map-tile-layout.js).
+- File giao diện: [`assets/map-tile-layout-demo.html`](assets/map-tile-layout-demo.html) kết hợp thư viện toán học [`scripts/map-tile-layout.js`](scripts/map-tile-layout.js).
 
 ---
 
@@ -155,7 +165,7 @@ Hỗ trợ sản xuất icon trang bị $64 \times 64$ hoặc $48 \times 48$ v�
 
 Chạy đóng khung hàng loạt:
 ```bash
-python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/generate_item_icon_sheet.py \
+python3 scripts/generate_item_icon_sheet.py \
     --input_sheet <icons_raw.png> \
     --output_dir <output_dir> \
     --grid 4x4 \
@@ -167,10 +177,10 @@ python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/generate_it
 ## 6. Thư Viện Tài Liệu Tham Khảo Chuyên Sâu (Meowa References)
 
 Được tích hợp đầy đủ trong thư mục `references/`:
-- [`asset-contract-presets.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/asset-contract-presets.md): **Bộ hợp đồng tài nguyên định sẵn cho các game kinh điển (Stardew Valley 16x16, Capcom CPS2, Hollow Knight, Hades, Pokémon GBA).**
-- [`anti-ai-craft-guide.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/anti-ai-craft-guide.md): Bộ quy chuẩn mỹ thuật thủ công, diệt trừ "mùi AI", nguyên tắc hue-shifting, đường động lực và từ điển prompt chuẩn studio.
-- [`pixel-and-hd-assets.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/pixel-and-hd-assets.md): Hướng dẫn chi tiết tạo sprite, nhân vật 8 hướng, tách nền và chuẩn hóa điểm ảnh.
-- [`animation-and-video.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/animation-and-video.md): Hướng dẫn thiết lập tư thế đầu, đệm chuyển động, pacing 8/12/16 frame, keyframe posing.
-- [`maps-tiles-and-textures.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/maps-tiles-and-textures.md): Toàn bộ toán học hình học Isometric, Hex-grid, Dual-grid và Parallax side-scroller.
-- [`ui-and-image-editing.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/ui-and-image-editing.md): Phân tách UI sheet và tạo biến thể trang bị nâng cấp.
-- [`web_parameter_contract.json`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/web_parameter_contract.json): Bản đặc tả tham số của Meowa AI (chứng minh backend dùng Nano Banana `gemini-3.1-flash-image`).
+- [`asset-contract-presets.md`](references/asset-contract-presets.md): **Bộ hợp đồng tài nguyên định sẵn cho các game kinh điển (Stardew Valley 16x16, Capcom CPS2, Hollow Knight, Hades, Pokémon GBA).**
+- [`anti-ai-craft-guide.md`](references/anti-ai-craft-guide.md): Bộ quy chuẩn mỹ thuật thủ công, diệt trừ "mùi AI", nguyên tắc hue-shifting, đường động lực và từ điển prompt chuẩn studio.
+- [`pixel-and-hd-assets.md`](references/pixel-and-hd-assets.md): Hướng dẫn chi tiết tạo sprite, nhân vật 8 hướng, tách nền và chuẩn hóa điểm ảnh.
+- [`animation-and-video.md`](references/animation-and-video.md): Hướng dẫn thiết lập tư thế đầu, đệm chuyển động, pacing 8/12/16 frame, keyframe posing.
+- [`maps-tiles-and-textures.md`](references/maps-tiles-and-textures.md): Toàn bộ toán học hình học Isometric, Hex-grid, Dual-grid và Parallax side-scroller.
+- [`ui-and-image-editing.md`](references/ui-and-image-editing.md): Phân tách UI sheet và tạo biến thể trang bị nâng cấp.
+- [`web_parameter_contract.json`](references/web_parameter_contract.json): Bản đặc tả tham số của Meowa AI (chứng minh backend dùng Nano Banana `gemini-3.1-flash-image`).
