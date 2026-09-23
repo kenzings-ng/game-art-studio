@@ -26,20 +26,20 @@ def apply_rarity_border(icon_img, rarity="common", border_width=2):
     icon_img = icon_img.convert("RGBA")
     w, h = icon_img.size
     color = RARITY_COLORS.get(rarity.lower(), RARITY_COLORS["common"])
-    
+
     draw = ImageDraw.Draw(icon_img)
     for b in range(border_width):
         draw.rectangle([b, b, w - 1 - b, h - 1 - b], outline=color)
-        
+
     return icon_img
 
 def slice_icon_grid(grid_image_path, output_dir, rows=4, cols=4, icon_size=(64, 64), default_rarity="common"):
     os.makedirs(output_dir, exist_ok=True)
     img = Image.open(grid_image_path).convert("RGBA")
-    
+
     cell_w = img.width // cols
     cell_h = img.height // rows
-    
+
     saved = []
     idx = 0
     for r in range(rows):
@@ -53,20 +53,47 @@ def slice_icon_grid(grid_image_path, output_dir, rows=4, cols=4, icon_size=(64, 
             cell.save(out_file, "PNG")
             saved.append(out_file)
             idx += 1
-            
-    print(f"Generated {len(saved)} icons at {output_dir}")
+
+    print(f"Generated {len(saved)} icons at {output_dir} ({cols}x{rows} grid, rarity: {default_rarity})")
     return saved
+
+def parse_grid_dimensions(grid_str):
+    """Parses '4x4', '4X4', or '4' into (rows, cols)."""
+    if not grid_str:
+        return None, None
+    s = grid_str.lower().strip()
+    if 'x' in s:
+        parts = s.split('x')
+        try:
+            return int(parts[0]), int(parts[1])
+        except ValueError:
+            pass
+    elif s.isdigit():
+        val = int(s)
+        return val, val
+    return None, None
 
 def main():
     parser = argparse.ArgumentParser(description="Slice and frame item icons with 5-tier rarity colors")
-    parser.add_argument("--input", required=True, help="Input icon grid image")
+    parser.add_argument("--input", "--input_sheet", dest="input", required=True, help="Input icon grid image")
     parser.add_argument("--output_dir", required=True, help="Output folder")
-    parser.add_argument("--rows", type=int, default=4, help="Grid rows")
-    parser.add_argument("--cols", type=int, default=4, help="Grid columns")
+    parser.add_argument("--grid", default=None, help="Grid format like '4x4' or '4' (sets both rows and cols)")
+    parser.add_argument("--rows", type=int, default=None, help="Grid rows (default: 4 or parsed from --grid)")
+    parser.add_argument("--cols", type=int, default=None, help="Grid columns (default: 4 or parsed from --grid)")
     parser.add_argument("--rarity", choices=["common", "uncommon", "rare", "epic", "legendary"], default="common")
-    
+
     args = parser.parse_args()
-    slice_icon_grid(args.input, args.output_dir, rows=args.rows, cols=args.cols, default_rarity=args.rarity)
+
+    # Resolve grid dimensions
+    grid_rows, grid_cols = parse_grid_dimensions(args.grid)
+    final_rows = args.rows if args.rows is not None else (grid_rows if grid_rows is not None else 4)
+    final_cols = args.cols if args.cols is not None else (grid_cols if grid_cols is not None else 4)
+
+    if not os.path.exists(args.input):
+        print(f"Error: Input file not found: {args.input}", file=sys.stderr)
+        sys.exit(1)
+
+    slice_icon_grid(args.input, args.output_dir, rows=final_rows, cols=final_cols, default_rarity=args.rarity)
 
 if __name__ == "__main__":
     main()

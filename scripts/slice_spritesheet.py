@@ -8,58 +8,99 @@ normalizes canvas bounds, and aligns bottom-center pivots.
 import os
 import sys
 import argparse
-from PIL import Image, ImageOps
+from PIL import Image
 import numpy as np
 
-def remove_background(img, bg_color=None, tolerance=30):
+
+def parse_color_key(color_key_str):
+    """
+    Parses a color_key string into:
+    - 'auto': sample corners
+    - 'none': do not remove background (preserve alpha)
+    - (r, g, b): target RGB color tuple
+    """
+    if not color_key_str or color_key_str.lower() in ("auto", "sample"):
+        return "auto"
+    if color_key_str.lower() in ("none", "null", "false", "disabled"):
+        return "none"
+
+    named_colors = {
+        "magenta": (255, 0, 255),
+        "fuchsia": (255, 0, 255),
+        "green": (0, 255, 0),
+        "lime": (0, 255, 0),
+        "black": (0, 0, 0),
+        "white": (255, 255, 255),
+        "cyan": (0, 255, 255)
+    }
+    key_lower = color_key_str.lower().strip()
+    if key_lower in named_colors:
+        return named_colors[key_lower]
+
+    if key_lower.startswith("#"):
+        hex_val = key_lower.lstrip("#")
+        if len(hex_val) == 6:
+            try:
+                return tuple(int(hex_val[i:i+2], 16) for i in (0, 2, 4))
+            except ValueError:
+                pass
+
+    return "auto"
+
+
+def remove_background(img, color_key="auto", tolerance=30):
     """
     Replaces background color with full transparency.
-    If bg_color is None, samples from the 4 corners of the image.
+    - If color_key is 'auto': samples from the 4 corners of the image.
+    - If color_key is 'none': returns original image in RGBA without keying.
+    - If color_key is an RGB tuple: removes that specific color within tolerance.
     """
     img = img.convert("RGBA")
+    if color_key == "none":
+        return img
+
     data = np.array(img)
-    
     r, g, b, a = data[:, :, 0], data[:, :, 1], data[:, :, 2], data[:, :, 3]
-    
-    if bg_color is None:
-        # Sample corners
+
+    if color_key == "auto":
         corners = [
             data[0, 0, :3],
             data[0, -1, :3],
             data[-1, 0, :3],
             data[-1, -1, :3]
         ]
-        # Average corner color
         bg_rgb = np.mean(corners, axis=0)
     else:
-        bg_rgb = np.array(bg_color[:3])
-        
+        bg_rgb = np.array(color_key[:3])
+
     diff = np.sqrt(
         (r.astype(float) - bg_rgb[0]) ** 2 +
         (g.astype(float) - bg_rgb[1]) ** 2 +
         (b.astype(float) - bg_rgb[2]) ** 2
     )
-    
+
     mask = diff < tolerance
     data[mask, 3] = 0
     return Image.fromarray(data)
 
+
 def slice_horizontal_strip(img, num_frames, output_dir, prefix="frame", anchor="bottom_center"):
     """
     Slices a horizontal strip into num_frames, trims excess padding, and standardizes canvas.
+    Handles empty/blank frames safely without unintended cropping or clipping.
     """
     os.makedirs(output_dir, exist_ok=True)
     width, height = img.size
     frame_width = width // num_frames
-    
+
     raw_frames = []
     max_w = 0
     max_h = 0
-    
+
     for i in range(num_frames):
         box = (i * frame_width, 0, (i + 1) * frame_width, height)
         frame = img.crop(box)
-        
+
         # Bounding box of non-transparent content
         bbox = frame.getbbox()
         if bbox:
@@ -68,51 +109,64 @@ def slice_horizontal_strip(img, num_frames, output_dir, prefix="frame", anchor="
             max_h = max(max_h, cropped.height)
             raw_frames.append(cropped)
         else:
-            raw_frames.append(frame)
-            
+            # Entirely transparent/empty frame. Store None to avoid size mismatch and clipping.
+            raw_frames.append(None)
+
+    # Fallback if every frame was empty
+    if max_w == 0 or max_h == 0:
+        max_w = max(1, frame_width)
+        max_h = max(1, height)
+
     # Add a safety margin to canvas
     canvas_w = max_w + 8
     canvas_h = max_h + 8
-    
+
     saved_paths = []
     for i, frame in enumerate(raw_frames):
         canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-        if anchor == "bottom_center":
-            paste_x = (canvas_w - frame.width) // 2
-            paste_y = canvas_h - frame.height - 4  # 4px padding from bottom
-        elif anchor == "center":
-            paste_x = (canvas_w - frame.width) // 2
-            paste_y = (canvas_h - frame.height) // 2
-        else:
-            paste_x = 0
-            paste_y = 0
-            
-        canvas.paste(frame, (paste_x, paste_y), frame)
+
+        if frame is not None:
+            if anchor == "bottom_center":
+                paste_x = (canvas_w - frame.width) // 2
+                paste_y = canvas_h - frame.height - 4  # 4px padding from bottom
+            elif anchor == "center":
+                paste_x = (canvas_w - frame.width) // 2
+                paste_y = (canvas_h - frame.height) // 2
+            else:
+                paste_x = 0
+                paste_y = 0
+
+            canvas.paste(frame, (paste_x, paste_y), frame)
+
         out_path = os.path.join(output_dir, f"{prefix}_{i:02d}.png")
         canvas.save(out_path, "PNG")
         saved_paths.append(out_path)
-        
+
     print(f"Extracted {len(saved_paths)} frames to {output_dir} (Canvas: {canvas_w}x{canvas_h})")
     return saved_paths
 
+
 def main():
     parser = argparse.ArgumentParser(description="Slice spritesheets with auto-transparency and anchor alignment")
-    parser.add_argument("--input", required=True, help="Path to input spritesheet image")
+    parser.add_argument("--input", "--input_sheet", dest="input", required=True, help="Path to input spritesheet image")
     parser.add_argument("--output_dir", required=True, help="Directory to save extracted frames")
     parser.add_argument("--frames", type=int, default=6, help="Number of horizontal animation frames")
     parser.add_argument("--prefix", default="frame", help="Prefix for output frame filenames")
+    parser.add_argument("--color_key", default="auto", help="Background keying color: 'auto', 'none', '#FF00FF', 'magenta', etc.")
     parser.add_argument("--tolerance", type=int, default=35, help="Color tolerance for background keying")
     parser.add_argument("--anchor", choices=["bottom_center", "center", "none"], default="bottom_center")
-    
+
     args = parser.parse_args()
-    
+
     if not os.path.exists(args.input):
         print(f"Error: Input file not found: {args.input}", file=sys.stderr)
         sys.exit(1)
-        
+
+    parsed_key = parse_color_key(args.color_key)
     src_img = Image.open(args.input)
-    transparent_img = remove_background(src_img, tolerance=args.tolerance)
+    transparent_img = remove_background(src_img, color_key=parsed_key, tolerance=args.tolerance)
     slice_horizontal_strip(transparent_img, args.frames, args.output_dir, prefix=args.prefix, anchor=args.anchor)
+
 
 if __name__ == "__main__":
     main()

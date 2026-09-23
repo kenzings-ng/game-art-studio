@@ -1,6 +1,6 @@
 ---
 name: game-art-studio
-description: End-to-end AI Game Art & Asset Studio powered by local Nano Banana (Imagen 3 / Gemini Image) and open-source Meowa AI architecture. Creates 2D pixel & HD game assets, 8-directional character spritesheets, action-first animations, 2:1 isometric & hex tilesets, dual-grid autotiling atlases, parallax side-scrollers, 5-tier UI item icons, interactive browser map previewer, and direct Unreal Engine Paper2D/PaperZD flipbook generation — 100% free with zero credits or subscriptions.
+description: End-to-end AI Game Art & Asset Studio powered by local Nano Banana (Imagen 3 / Gemini Image) and open-source Meowa AI architecture. Creates 2D pixel & HD game assets, 8-directional character spritesheets, action-first animations, 2:1 isometric & hex tilesets, dual-grid autotiling atlases, parallax side-scrollers, 5-tier UI item icons, interactive browser map previewer, direct Unreal Engine Paper2D/PaperZD flipbook generation, and Anti-AI Handcrafted Art Styling — 100% free with zero credits or subscriptions.
 ---
 
 # Game Art Studio (Meowa Open-Source Architecture + Local Nano Banana Engine)
@@ -8,31 +8,59 @@ description: End-to-end AI Game Art & Asset Studio powered by local Nano Banana 
 Game Art Studio là studio sản xuất tài nguyên đồ họa game toàn diện, kết hợp giữa:
 1. **Lõi sinh ảnh Nano Banana nội bộ** (`generate_image` — tương đương `gemini-3.1-flash-image` / `gemini-3-pro-image` mà chính Meowa AI sử dụng làm backend).
 2. **Kiến trúc mã nguồn mở chuẩn mực của Meowa AI** (`Meowa-AI/meowa-skills`): Quy chuẩn hợp đồng tài nguyên (Asset Contract), kỹ thuật Action-First Pose, ma trận căn lề đệm động (Directional Motion Padding), hệ tọa độ Isometric Diamond $128 \times 64$, Hex-Isometric, Dual-Grid Autotiling $4 \times 4$, và máy chủ xem trước bản đồ trên trình duyệt.
-3. **Pipeline xuất xưởng Game Engine tự động**: Tách nền Chroma-key/Alpha, ghim tâm chân (Bottom-Center Pivot), tạo GIF preview động, và import trực tiếp vào **Unreal Engine 5 Paper2D / PaperZD** hoặc **Godot 4**.
+3. **Giao Thức Khởi Tạo Hợp Đồng & Chống "Mùi AI" (Asset Contract & Anti-AI Engine)**: Tuyệt đối không sinh ảnh bừa bãi khi chưa chốt hợp đồng phong cách. Tự động liên kết các Preset kinh điển (Stardew Valley 16x16, Capcom CPS2, Hades, Hollow Knight) và áp dụng bộ luật thủ công (Hue-shifting, Line of Action, Không bóng gối).
+4. **Pipeline xuất xưởng Game Engine tự động**: Tách nền Chroma-key/Alpha, ghim tâm chân (Bottom-Center Pivot), tạo GIF preview động, và import trực tiếp vào **Unreal Engine 5 Paper2D / PaperZD** hoặc **Godot 4**.
 
 Toàn bộ quy trình chạy **cục bộ 100%, vĩnh viễn không tốn credit, không cần API key trả phí**.
 
 ---
 
-## 1. Hợp Đồng Tài Nguyên & Triết Lý Prompt (Meowa Asset Contract)
+## 1. Giao Thức Khởi Tạo Hợp Đồng Bắt Buộc (Mandatory Asset Contract)
 
-### A. Thiết Lập Hợp Đồng Tài Nguyên (Asset Contract First)
-Trước khi ra lệnh vẽ, luôn xác định rõ các ràng buộc:
-- **Loại tài nguyên runtime**: Sprite nhân vật, quái vật, đạo cụ (prop), ô gạch địa hình (tile), UI/Icon, hay lớp bản đồ (map layer).
-- **Quy chuẩn hiển thị**: Pixel Art hay HD Art.
-- **Kích thước & Bố cục**: Kích thước ô (cell size), số lượng frame, tỷ lệ khung hình (aspect ratio: 1:1, 4:3, 16:9), kênh trong suốt (transparency).
-- **Cấu trúc bàn giao**: Sprite sheet tuyến tính, bộ 8 hướng (8-direction set), hay atlas địa hình (terrain atlas).
+> 🛑 **QUY TẮC CỐT LÕI: KHÔNG ĐƯỢC TỰ Ý SINH ẢNH KHI THIẾU RÀNG BUỘC**
+> Nếu người dùng yêu cầu vẽ một tài nguyên game mà **chưa chỉ định phong cách hoặc thông số kỹ thuật rõ ràng**, AI Agent **CẤM** đoán mò rồi sinh ảnh ngay lập tức. Làm vậy sẽ khiến kết quả bị lệch hoàn toàn so với mong đợi (như vẽ đại kiếm 128x128 khi người dùng thực chất cần icon 16x16 kiểu Stardew Valley), bắt người dùng phải prompt đi prompt lại rất nhiều lần tốn thời gian.
 
-### B. Triết Lý Prompt Tự Nhiên (Natural Language Prompting)
-> ⚠️ **Quy tắc Meowa**: Tuyệt đối **không** dùng từ khóa rườm rà kiểu Stable Diffusion cũ (như *"masterpiece, 8k, trending on artstation, unreal engine render, photorealistic"*).
-> 
-> Hãy mô tả bằng ngôn ngữ tự nhiên, ngắn gọn và trực tiếp vào chủ thể, hành động, góc nhìn và chất liệu:
-> - Tốt: `16-bit pixel art, Vanguard warrior in dark steel plate armor, heavy claymore raised above shoulder ready to strike, facing right, pure magenta background #FF00FF, no floor shadow.`
-> - Tránh: `masterpiece, ultra realistic 8k, beautiful anime warrior, dynamic lighting, octane render, highly detailed.`
+### A. Quy Trình Khóa Hợp Đồng 2 Nhánh (Two-Branch Contract Resolution):
+
+1. **Nhánh 1: Người dùng đã nêu tên Game cụ thể (e.g. "Stardew Valley", "Capcom", "Hollow Knight")**:
+   - **TỰ ĐỘNG ÁP DỤNG PRESET CHUẨN** trong [`references/asset-contract-presets.md`](file:///mnt/Data/Projects/game-art-studio/references/asset-contract-presets.md):
+     - **Stardew Valley / Terraria**: Lưới siêu thô $16 \times 16$ native, ngân sách màu 8-16 màu, viền neon đảo ngược nếu là vũ khí thiên hà.
+     - **Capcom CPS2 / NeoGeo**: Lưới $64 \times 64$ / $128 \times 128$, viền đen than 1px, chuyển nhiệt độ màu gắt (Hue-shifting).
+     - **Hollow Knight / Cuphead**: 2D HD cọ mực vẽ tay, nét cọ biến thiên, màu bệt phẳng.
+     - **Hades / Dead Cells**: 2D Chiaroscuro tương phản cực độ, viền sáng ven (Rim light).
+   - Tóm tắt nhanh hợp đồng rồi tiến hành sinh ảnh đúng chuẩn.
+
+2. **Nhánh 2: Yêu cầu chung chung (e.g. "vẽ cho tôi cây kiếm", "vẽ nhân vật chiến binh")**:
+   - Dùng công cụ `ask_question` (hoặc đưa ra bảng tùy chọn nhanh) để người dùng chọn:
+     - **Phong cách đồ họa**: 16x16 Pixel thô (Stardew/Celeste) | 16-bit/32-bit Arcade (SNES/Capcom) | 2D Vẽ tay Stylized HD (Hades/Hollow Knight).
+     - **Mục đích sử dụng**: Icon túi đồ (góc $45^\circ$) | Sprite nhân vật ngang (Side-scroller) | Sprite góc nhìn trên xuống (Top-down) | Gạch địa hình (Tileset).
+     - **Bảng màu & Chất liệu**: Kim loại phản quang | Tinh thể ma thuật phát sáng | Đồ da/vải mộc.
 
 ---
 
-## 2. Quy Trình Character & Animation (Meowa Action-First Pipeline)
+## 2. Bí Quyết Vẽ Art Sống Động, Không Giống AI (Anti-AI Craft Rules)
+
+Chi tiết chuyên sâu xem tại [`references/anti-ai-craft-guide.md`](file:///mnt/Data/Projects/game-art-studio/references/anti-ai-craft-guide.md):
+
+1. **Đường Động Lực (Line of Action) & Dáng Đứng Bất Đối Xứng (Contrapposto)**:
+   - Cấm vẽ cột sống thẳng đứng $90^\circ$. Bắt buộc uốn cong hình chữ **C** hoặc chữ **S**.
+   - Trọng tâm lệch: 1 chân chịu $80\%$ sức nặng (chân trụ), 1 chân co/thả lỏng. Trục vai nghiêng ngược chiều trục hông.
+   - **Thử nghiệm bóng đen (The Blackout Test)**: Nhân vật khi tô đen kịt `#000000` vẫn phải đọc rõ hình thái, vũ khí và cảm xúc từ xa. Luôn để khoảng trống âm (Negative Space) giữa hai tay, chân và thân mình.
+2. **Quy Tắc Vàng Chuyển Nhiệt Độ Màu (Hue-Shifting)**:
+   - **Cấm**: Đổ bóng bằng cách pha đen/xám, nâng sáng bằng cách pha trắng (làm tranh bị đục, bẩn và tái).
+   - **Bắt buộc**: Đèn ấm (Ánh nắng/Lửa) thì Highlight ngả Vàng Chanh $\rightarrow$ Shadow **dịch sang Tím Indigo/Xanh Navy** (do phản chiếu vòm trời). Đèn lạnh (Ánh trăng/Phép) thì Shadow **dịch sang Đỏ Mận/Tím Ấm**.
+3. **Nguồn Sáng Đơn Rõ Ràng (Key Light at $45^\circ$) — Diệt Trừ Pillow Shading**:
+   - Khóa chặt nguồn sáng chính từ góc trên-trái ($10$ giờ) hoặc trên-phải ($2$ giờ).
+   - Đổ bóng đổ cứng (Cast shadow) dưới cằm, vạt áo, lưỡi kiếm. Ranh giới sáng - tối sắc nét, tuyệt đối không làm mờ dần từ mép vào tâm.
+4. **Quy Tắc Tỉ Lệ Chi Tiết 70 - 20 - 10 (Resting Areas)**:
+   - **70% Vùng nghỉ mắt**: Mảng giáp phẳng, vạt áo trơn, cơ bắp liền khối để tạo cảm giác đồ họa vững chãi.
+   - **20% Chi tiết chức năng**: Dây thắt lưng, khóa cài, nẹp ủng.
+   - **10% Điểm nhấn tiêu điểm**: Ánh sáng phản quang trong đồng tử, vết rạn trên chuôi gươm.
+   - *Bỏ hoàn toàn các hoa văn vàng kim vô nghĩa mà AI hay tự vẽ.*
+
+---
+
+## 3. Quy Trình Character & Animation (Meowa Action-First Pipeline)
 
 ### A. Kỹ Thuật Tư Thế Mở Đầu Hành Động (Action-First Pose)
 Trong diễn hoạt game, khung hình đầu tiên của animation chính là nguồn gốc chuyển động. Nếu bắt đầu từ tư thế đứng im (Neutral Idle) để làm hoạt ảnh Chém kiếm hay Chạy, mô hình sẽ lãng phí 2-3 frame đầu chỉ để "vung kiếm lên" hoặc "nhấc chân", khiến animation bị delay và giật vòng lặp (loop glitch).
@@ -52,10 +80,11 @@ Chuyển động cần khoảng trống trong suốt để di chuyển mà khôn
 1. **Cắt Frame & Ghim Pivot Chân (`scripts/slice_spritesheet.py`)**:
    ```bash
    python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/slice_spritesheet.py \
-       --input <path_to_spritesheet.png> \
+       --input_sheet <path_to_spritesheet.png> \
        --output_dir <output_frames_folder> \
        --frames 8 \
        --color_key auto \
+       --tolerance 35 \
        --anchor bottom_center
    ```
 2. **Ghép Animated GIF Preview (`scripts/assemble_flipbook_gif.py`)**:
@@ -69,13 +98,13 @@ Chuyển động cần khoảng trống trong suốt để di chuyển mà khôn
    ```bash
    /mnt/Data/Engine/Binaries/Linux/UnrealEditor-Cmd \
        ProjectAscendant/ProjectAscendant.uproject \
-       -ExecutePythonScript=/home/kenzings/.gemini/config/skills/game-art-studio/scripts/import_ue_flipbooks.py \
+       -ExecutePythonScript="scripts/import_ue_flipbooks.py --frames_dir <output_frames_folder> --dest_path /Game/Art/Flipbooks --name FB_Hero_Attack --fps 12.0" \
        -nullrhi -nosound -unattended
    ```
 
 ---
 
-## 3. Quy Trình Level Tilesets & Hệ Tọa Độ Bản Đồ (Meowa Map Engine)
+## 4. Quy Trình Level Tilesets & Hệ Tọa Độ Bản Đồ (Meowa Map Engine)
 
 Được kế thừa nguyên bản từ bộ tính toán tọa độ và script bản đồ của Meowa AI:
 
@@ -112,7 +141,7 @@ python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/map-preview
 
 ---
 
-## 4. Quy Trình Game UI & Item Icons (5-Tier Rarity Matrix)
+## 5. Quy Trình Game UI & Item Icons (5-Tier Rarity Matrix)
 
 Hỗ trợ sản xuất icon trang bị $64 \times 64$ hoặc $48 \times 48$ với khung viền 5 cấp độ hiếm chuẩn RPG:
 
@@ -135,9 +164,11 @@ python3 /home/kenzings/.gemini/config/skills/game-art-studio/scripts/generate_it
 
 ---
 
-## 5. Thư Viện Tài Liệu Tham Khảo Chuyên Sâu (Meowa References)
+## 6. Thư Viện Tài Liệu Tham Khảo Chuyên Sâu (Meowa References)
 
 Được tích hợp đầy đủ trong thư mục `references/`:
+- [`asset-contract-presets.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/asset-contract-presets.md): **Bộ hợp đồng tài nguyên định sẵn cho các game kinh điển (Stardew Valley 16x16, Capcom CPS2, Hollow Knight, Hades, Pokémon GBA).**
+- [`anti-ai-craft-guide.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/anti-ai-craft-guide.md): Bộ quy chuẩn mỹ thuật thủ công, diệt trừ "mùi AI", nguyên tắc hue-shifting, đường động lực và từ điển prompt chuẩn studio.
 - [`pixel-and-hd-assets.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/pixel-and-hd-assets.md): Hướng dẫn chi tiết tạo sprite, nhân vật 8 hướng, tách nền và chuẩn hóa điểm ảnh.
 - [`animation-and-video.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/animation-and-video.md): Hướng dẫn thiết lập tư thế đầu, đệm chuyển động, pacing 8/12/16 frame, keyframe posing.
 - [`maps-tiles-and-textures.md`](file:///home/kenzings/.gemini/config/skills/game-art-studio/references/maps-tiles-and-textures.md): Toàn bộ toán học hình học Isometric, Hex-grid, Dual-grid và Parallax side-scroller.
